@@ -4,9 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, validateCsrfToken } from "./csrf";
 
 export const SESSION_COOKIE_NAME = "spp_session";
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.SESSION_SECRET || "default-development-session-secret-at-least-32-chars-long"
-);
+
+function getJwtSecret(): Uint8Array {
+  const secret = process.env.SESSION_SECRET || "default-development-session-secret-at-least-32-chars-long";
+  return new Uint8Array(Buffer.from(secret, "utf-8"));
+}
 
 export type UserRole = "admin" | "kepala_sekolah" | "teller" | "siswa";
 
@@ -29,7 +31,7 @@ export async function createSessionToken(payload: SessionPayload): Promise<strin
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("24h")
-    .sign(JWT_SECRET);
+    .sign(getJwtSecret());
 }
 
 /**
@@ -37,7 +39,7 @@ export async function createSessionToken(payload: SessionPayload): Promise<strin
  */
 export async function verifySessionToken(token: string): Promise<SessionPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, getJwtSecret());
     return payload as unknown as SessionPayload;
   } catch {
     return null;
