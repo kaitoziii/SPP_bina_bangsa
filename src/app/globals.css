@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #ffffff;
+    --foreground: #09090b;
+
+    --surface: #ffffff;
+    --surface-subtle: #f8fafc;
+    --surface-muted: #f1f5f9;
+
+    --border: #e2e8f0;
+    --divider: #f1f5f9;
+    --ring: #09090b;
+
+    --accent: #0f172a;
+    --accent-subtle: #f1f5f9;
+    --accent-foreground: #ffffff;
+
+    --radius: 10px;
+
+    /* Semantic Status Tokens - Soft, clear, accessible */
+    --status-lunas-bg: #ecfdf5;
+    --status-lunas-text: #065f46;
+    --status-lunas-dot: #10b981;
+    --status-lunas-border: #a7f3d0;
+
+    --status-belum-bg: #f8fafc;
+    --status-belum-text: #334155;
+    --status-belum-dot: #64748b;
+    --status-belum-border: #cbd5e1;
+
+    --status-tunggakan-bg: #fff1f2;
+    --status-tunggakan-text: #9f1239;
+    --status-tunggakan-dot: #f43f5e;
+    --status-tunggakan-border: #fecdd3;
+
+    --status-beasiswa-bg: #f0f9ff;
+    --status-beasiswa-text: #0369a1;
+    --status-beasiswa-dot: #0ea5e9;
+    --status-beasiswa-border: #bae6fd;
+  }
+
+  .dark {
+    --background: #09090b;
+    --foreground: #f8fafc;
+
+    --surface: #111115;
+    --surface-subtle: #18181b;
+    --surface-muted: #27272a;
+
+    --border: #27272a;
+    --divider: #1f1f23;
+    --ring: #e2e8f0;
+
+    --accent: #f8fafc;
+    --accent-subtle: #27272a;
+    --accent-foreground: #09090b;
+
+    --status-lunas-bg: #064e3b33;
+    --status-lunas-text: #6ee7b7;
+    --status-lunas-dot: #34d399;
+    --status-lunas-border: #065f46;
+
+    --status-belum-bg: #1e293b40;
+    --status-belum-text: #cbd5e1;
+    --status-belum-dot: #94a3b8;
+    --status-belum-border: #334155;
+
+    --status-tunggakan-bg: #88133733;
+    --status-tunggakan-text: #fda4af;
+    --status-tunggakan-dot: #fb7185;
+    --status-tunggakan-border: #9f1239;
+
+    --status-beasiswa-bg: #0c4a6e33;
+    --status-beasiswa-text: #7dd3fc;
+    --status-beasiswa-dot: #38bdf8;
+    --status-beasiswa-border: #075985;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-zinc-200 dark:selection:bg-zinc-800;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  input, select, textarea, button {
+    font-feature-settings: inherit;
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom scrollbar subtle */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.2);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0.4);
+}

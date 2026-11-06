@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id_user    Int      @id @default(autoincrement())
+  nama       String
+  username   String   @unique
+  password   String
+  role       String   // admin, kepala_sekolah, teller, siswa
+  status     String   @default("AKTIF")
+  created_at DateTime @default(now())
+
+  siswa               siswa?
+  audit_logs          audit_log[]
+  beasiswa_diputuskan pengajuan_beasiswa[] @relation("AdminPemutus")
+}
+
+model jurusan {
+  id_jurusan   Int     @id @default(autoincrement())
+  kode_jurusan String  @unique
+  nama_jurusan String
+  keterangan   String?
+
+  kelas kelas[]
+}
+
+model tahun_ajaran {
+  id_tahun_ajaran Int      @id @default(autoincrement())
+  tahun_ajaran    String
+  tanggal_mulai   DateTime
+  tanggal_selesai DateTime
+  status          String   @default("AKTIF")
+
+  kelas       kelas[]
+  tarif_spp   tarif_spp[]
+  tagihan_spp tagihan_spp[]
+  siswa       siswa[]
+}
+
+model kelas {
+  id_kelas        Int    @id @default(autoincrement())
+  nama_kelas      String
+  tingkat         String
+  id_jurusan      Int
+  id_tahun_ajaran Int
+
+  jurusan      jurusan      @relation(fields: [id_jurusan], references: [id_jurusan])
+  tahun_ajaran tahun_ajaran @relation(fields: [id_tahun_ajaran], references: [id_tahun_ajaran])
+  siswa        siswa[]
+}
+
+model siswa {
+  id_siswa        Int      @id @default(autoincrement())
+  nis             String   @unique
+  nisn            String   @unique
+  nama            String
+  jenis_kelamin   String
+  tempat_lahir    String
+  tanggal_lahir   DateTime
+  alamat          String
+  no_hp           String
+  nama_orang_tua  String
+  id_kelas        Int
+  id_tahun_ajaran Int
+  id_user         Int      @unique
+  status          String   @default("AKTIF")
+
+  user                       users                       @relation(fields: [id_user], references: [id_user])
+  kelas                      kelas                       @relation(fields: [id_kelas], references: [id_kelas])
+  tahun_ajaran               tahun_ajaran                @relation(fields: [id_tahun_ajaran], references: [id_tahun_ajaran])
+  virtual_account            virtual_account?
+  tagihan_spp                tagihan_spp[]
+  transaksi_payment_gateway  transaksi_payment_gateway[]
+  pengajuan_beasiswa         pengajuan_beasiswa[]
+}
+
+model tarif_spp {
+  id_tarif        Int     @id @default(autoincrement())
+  id_tahun_ajaran Int
+  nominal         Int
+  keterangan      String?
+  status          String  @default("AKTIF")
+
+  tahun_ajaran tahun_ajaran  @relation(fields: [id_tahun_ajaran], references: [id_tahun_ajaran])
+  tagihan_spp  tagihan_spp[]
+}
+
+model virtual_account {
+  id_va          Int      @id @default(autoincrement())
+  id_siswa       Int      @unique
+  nomor_va       String   @unique
+  prefix         String   @default("88000")
+  status         String   @default("AKTIF")
+  tanggal_dibuat DateTime @default(now())
+
+  siswa siswa @relation(fields: [id_siswa], references: [id_siswa])
+}
+
+model tagihan_spp {
+  id_tagihan          Int      @id @default(autoincrement())
+  id_siswa            Int
+  id_tarif            Int
+  id_tahun_ajaran     Int
+  bulan               Int
+  tahun               Int
+  nominal             Int
+  tanggal_jatuh_tempo DateTime
+  status              String   // BELUM BAYAR, LUNAS, TUNGGAKAN, BEASISWA
+
+  siswa        siswa        @relation(fields: [id_siswa], references: [id_siswa])
+  tarif_spp    tarif_spp    @relation(fields: [id_tarif], references: [id_tarif])
+  tahun_ajaran tahun_ajaran @relation(fields: [id_tahun_ajaran], references: [id_tahun_ajaran])
+  pembayaran   pembayaran[]
+
+  @@unique([id_siswa, bulan, tahun])
+  @@index([id_siswa, status])
+}
+
+model transaksi_payment_gateway {
+  id_transaksi      Int      @id @default(autoincrement())
+  transaction_id    String   @unique
+  virtual_account   String
+  id_siswa          Int?
+  tanggal_transaksi DateTime
+  waktu_transaksi   String
+  nominal           Int
+  status_transaksi  String   // PAID, FAILED, PENDING
+  payment_channel   String   @default("VIRTUAL_ACCOUNT")
+  reference_number  String?
+  raw_response      String
+  created_at        DateTime @default(now())
+  updated_at        DateTime @default(now())
+
+  siswa      siswa?       @relation(fields: [id_siswa], references: [id_siswa])
+  pembayaran pembayaran[]
+
+  @@index([virtual_account])
+  @@index([transaction_id])
+}
+
+model pembayaran {
+  id_pembayaran      Int      @id @default(autoincrement())
+  id_transaksi       Int
+  id_tagihan         Int
+  tanggal_pembayaran DateTime
+  nominal_pembayaran Int
+  status             String   @default("BERHASIL")
+
+  transaksi_payment_gateway transaksi_payment_gateway @relation(fields: [id_transaksi], references: [id_transaksi])
+  tagihan_spp               tagihan_spp               @relation(fields: [id_tagihan], references: [id_tagihan])
+
+  @@index([id_transaksi])
+  @@index([id_tagihan])
+}
+
+model pengajuan_beasiswa {
+  id_pengajuan      Int       @id @default(autoincrement())
+  id_siswa          Int
+  jenis             String    // PRESTASI, KURANG_MAMPU, LAINNYA
+  alasan            String
+  lampiran          String?
+  status            String    @default("DIAJUKAN") // DIAJUKAN, DISETUJUI, DITOLAK, DIBATALKAN
+  jumlah_bulan      Int?
+  bulan_mulai       Int?
+  tahun_mulai       Int?
+  catatan_admin     String?
+  id_admin_pemutus  Int?
+  tanggal_pengajuan DateTime  @default(now())
+  tanggal_keputusan DateTime?
+
+  siswa siswa  @relation(fields: [id_siswa], references: [id_siswa])
+  admin users? @relation("AdminPemutus", fields: [id_admin_pemutus], references: [id_user])
+
+  @@index([id_siswa, status])
+}
+
+model audit_log {
+  id_log      Int      @id @default(autoincrement())
+  id_user     Int?
+  aksi        String
+  entitas     String
+  id_entitas  String
+  data_sebelum String?
+  data_sesudah String?
+  created_at  DateTime @default(now())
+
+  user users? @relation(fields: [id_user], references: [id_user])
+
+  @@index([entitas, id_entitas])
+  @@index([created_at])
+}
+
+model callback_log {
+  id_callback      Int      @id @default(autoincrement())
+  ip_address       String?
+  signature        String?
+  payload          String
+  status_code      Int
+  response_message String
+  is_success       Boolean
+  created_at       DateTime @default(now())
+
+  @@index([created_at])
+}
